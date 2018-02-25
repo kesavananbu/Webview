@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:icon="@drawable/home"
+        android:title="Home"
+        android:id="@+id/home"
+        android:orderInCategory="1"
+        app:showAsAction="always"/>
+  <item
+        android:title=""
+        app:showAsAction="always"
+        android:orderInCategory="3"/>
+    <item
+        android:id="@+id/refresh"
+        android:orderInCategory="4"
+        android:title=""
+        android:icon="@drawable/refresh"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_bookmark"
+        android:icon="@drawable/ic_bookmark_white_24dp"
+        android:orderInCategory="5"
+        android:title="action_bookmark"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_back"
+        android:icon="@drawable/ic_keyboard_arrow_left_white_24dp"
+        android:orderInCategory="6"
+        android:title="action_back"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_forward"
+        android:icon="@drawable/ic_keyboard_arrow_right_white_24dp"
+        android:orderInCategory="7"
+        android:title="action_forward"
+        app:showAsAction="always" />
+    
+    <item
+        android:id="@+id/save"
+        android:orderInCategory="8"
+        android:title="Save"
+        android:icon="@drawable/home"
+        />
+    <item
+        android:id="@+id/show_bookmark"
+        android:title="Bookmark"
+        android:orderInCategory="9"
+        />
+    <item
+            android:id="@+id/print"
+            android:title="Print"
+        android:orderInCategory="10"/>
+    <item
+        android:id="@+id/history"
+        android:title="History"
+        android:orderInCategory="11"/>
+    <item
+        android:id="@+id/exit"
+        android:title="Exit"
+        android:orderInCategory="12"/>
+
+
+</menu>
