@@ -41,6 +41,10 @@ public class MainActivity extends AppCompatActivity {
     Menu m;
     Boolean clearHistory=false;
     final Activity MyActivity = this;
+    private static final int EXTERNAL_STORAGE_PERMISSION_CONSTANT = 100;
+   private static final int REQUEST_PERMISSION_SETTING = 101;
+   private boolean sentToSettings = false;
+   private SharedPreferences permissionStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         webview = (WebView) findViewById(R.id.webview);
         PB=(ProgressBar)findViewById(R.id.progressbar);
+        permissionStatus = getSharedPreferences("permissionStatus",MODE_PRIVATE);
         getSupportActionBar().setTitle("");
        if (savedInstanceState != null) {
             webview.restoreState(savedInstanceState);
@@ -62,33 +67,114 @@ public class MainActivity extends AppCompatActivity {
         webviewinit();
 
         webview.setDownloadListener(new DownloadListener()
-        {
+       {
 
-            @Override
-            public void onDownloadStart(String url, String userAgent,
-                                        String contentDisposition, String mimeType,
-                                        long contentLength) {
-                DownloadManager.Request request = new DownloadManager.Request(
-                        Uri.parse(url));
-                request.setMimeType(mimeType);
-                String cookies = CookieManager.getInstance().getCookie(url);
-                request.addRequestHeader("cookie", cookies);
-                request.addRequestHeader("User-Agent", userAgent);
-                request.setDescription("Downloading file...");
-                request.setTitle(URLUtil.guessFileName(url, contentDisposition,
-                        mimeType));
-                request.allowScanningByMediaScanner();
-                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                request.setDestinationInExternalPublicDir(
-                        Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(
-                                url, contentDisposition, mimeType));
-                DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-                dm.enqueue(request);
-                Toast.makeText(getApplicationContext(), "Downloading File",
-                        Toast.LENGTH_LONG).show();
-            }});
+           @Override
+           public void onDownloadStart(String url, String userAgent,
+                                       String contentDisposition, String mimeType,
+                                       long contentLength) {
+               try {
+                   getper();
+                   DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                   request.setMimeType(mimeType);
+                   String cookies = CookieManager.getInstance().getCookie(url);
+                   request.addRequestHeader("cookie", cookies);
+                   request.addRequestHeader("User-Agent", userAgent);
+                   request.setDescription("Downloading file...");
+                   request.setTitle(URLUtil.guessFileName(url, contentDisposition,
+                           mimeType));
+                   request.allowScanningByMediaScanner();
+                   request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                   request.setDestinationInExternalPublicDir(
+                           Environment.DIRECTORY_DOWNLOADS, URLUtil.guessFileName(
+                                   url, contentDisposition, mimeType));
+                   DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                   dm.enqueue(request);
+                   Toast.makeText(getApplicationContext(), "Downloading File",
+                           Toast.LENGTH_LONG).show();
+               }
+               catch(Exception e)
+                   {
+                       Toast.makeText(getBaseContext(), "Storage Permission Not Granted So Downloading is Cancelled", Toast.LENGTH_SHORT).show();
+                   }
+           }});
 
-    }
+   }
+   public void getper()
+   {
+
+       if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+           if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+               //Show Information about why you need the permission
+               AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+               builder.setTitle("Need Storage Permission");
+               builder.setMessage("This app needs storage permission.");
+               builder.setPositiveButton("Grant", new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       dialog.cancel();
+                       ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, EXTERNAL_STORAGE_PERMISSION_CONSTANT);
+                   }
+               });
+               builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       dialog.cancel();
+                   }
+               });
+               builder.show();
+           } else if (permissionStatus.getBoolean(Manifest.permission.WRITE_EXTERNAL_STORAGE,false)) {
+               //Previously Permission Request was cancelled with 'Dont Ask Again',
+               // Redirect to Settings after showing Information about why you need the permission
+               AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+               builder.setTitle("Need Storage Permission");
+               builder.setMessage("This app needs storage permission.");
+               builder.setPositiveButton("Grant", new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       dialog.cancel();
+                       sentToSettings = true;
+                       Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                       Uri uri = Uri.fromParts("package", getPackageName(), null);
+                       intent.setData(uri);
+                       startActivityForResult(intent, REQUEST_PERMISSION_SETTING);
+                       Toast.makeText(getBaseContext(), "Go to Permissions to Grant Storage", Toast.LENGTH_LONG).show();
+                   }
+               });
+               builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(DialogInterface dialog, int which) {
+                       dialog.cancel();
+                   }
+               });
+               builder.show();
+           } else {
+               //just request the permission
+               ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, EXTERNAL_STORAGE_PERMISSION_CONSTANT);
+           }
+
+           SharedPreferences.Editor editor = permissionStatus.edit();
+           editor.putBoolean(Manifest.permission.WRITE_EXTERNAL_STORAGE,true);
+           editor.commit();
+
+
+       } else {
+
+       }
+   }
+   @Override
+   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+       super.onActivityResult(requestCode, resultCode, data);
+       if (requestCode == REQUEST_PERMISSION_SETTING) {
+           if (ActivityCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+           }
+       }
+   }
+   private boolean isNetworkAvailable() {
+       ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService( CONNECTIVITY_SERVICE );
+       NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+       return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+   }
     public void history_add()
     {
         DateFormat df = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm");
